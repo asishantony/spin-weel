@@ -6,6 +6,7 @@ class SpinWheel {
         this.currentRotation = 0;
         this.isSpinning = false;
         this.lastWinner = null;
+        this.spinSound = null;
         this.colors = [
             '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
             '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
@@ -13,6 +14,7 @@ class SpinWheel {
         ];
         
         this.initializeEventListeners();
+        this.createSpinSound();
         this.drawEmptyWheel();
     }
     
@@ -31,12 +33,28 @@ class SpinWheel {
         
         // Spin button
         document.getElementById('spinBtn').addEventListener('click', () => {
+            // Initialize audio context on first user interaction
+            if (!this.audioContext) {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
             this.spin();
         });
         
         // Canvas click to spin
         this.canvas.addEventListener('click', () => {
             if (!this.isSpinning && this.participants.length > 1) {
+                // Initialize audio context on first user interaction
+                if (!this.audioContext) {
+                    try {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.log('Web Audio API not supported');
+                    }
+                }
                 this.spin();
             }
         });
@@ -58,6 +76,140 @@ class SpinWheel {
         document.getElementById('newGameBtn').addEventListener('click', () => {
             this.startNewGame();
         });
+    }
+    
+    createSpinSound() {
+        // Create spinning sound using Web Audio API
+        this.audioContext = null;
+        this.spinSound = null;
+        this.clapSound = null;
+        
+        try {
+            // Initialize audio context on first user interaction
+            this.initAudioContext = () => {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            };
+        } catch (e) {
+            console.log('Web Audio API not supported');
+        }
+    }
+    
+    playSpinSound() {
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Create spinning sound effect
+            const oscillator = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(this.audioContext.destination);
+            
+            // Start with a higher frequency and decrease over time
+            oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 4);
+            
+            // Volume envelope
+            gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 4);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.start(this.audioContext.currentTime);
+            oscillator.stop(this.audioContext.currentTime + 4);
+            
+            this.currentSpinSound = { oscillator, gainNode };
+        } catch (e) {
+            console.log('Could not play spin sound:', e);
+        }
+    }
+    
+    stopSpinSound() {
+        if (this.currentSpinSound) {
+            try {
+                this.currentSpinSound.gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                this.currentSpinSound.oscillator.stop(this.audioContext.currentTime + 0.1);
+            } catch (e) {
+                // Sound already stopped
+            }
+            this.currentSpinSound = null;
+        }
+    }
+    
+    playWinningSound() {
+        try {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Create clapping sound effect with multiple noise bursts
+            const playClap = (delay = 0) => {
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                const filter = this.audioContext.createBiquadFilter();
+                
+                oscillator.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                // Create noise-like sound for clap
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(100, this.audioContext.currentTime + delay);
+                oscillator.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + delay + 0.01);
+                oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + delay + 0.1);
+                
+                // High-pass filter for sharper clap sound
+                filter.type = 'highpass';
+                filter.frequency.setValueAtTime(200, this.audioContext.currentTime + delay);
+                
+                // Sharp attack and quick decay for clap
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime + delay);
+                gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + delay + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + delay + 0.15);
+                
+                oscillator.start(this.audioContext.currentTime + delay);
+                oscillator.stop(this.audioContext.currentTime + delay + 0.15);
+            };
+            
+            // Play multiple claps in sequence
+            playClap(0);      // First clap
+            playClap(0.2);    // Second clap
+            playClap(0.4);    // Third clap
+            playClap(0.6);    // Fourth clap
+            playClap(0.8);    // Fifth clap
+            
+            // Add some celebratory high notes
+            setTimeout(() => {
+                try {
+                    const celebrationOsc = this.audioContext.createOscillator();
+                    const celebrationGain = this.audioContext.createGain();
+                    
+                    celebrationOsc.connect(celebrationGain);
+                    celebrationGain.connect(this.audioContext.destination);
+                    
+                    celebrationOsc.type = 'sine';
+                    celebrationOsc.frequency.setValueAtTime(523, this.audioContext.currentTime); // C5
+                    celebrationOsc.frequency.setValueAtTime(659, this.audioContext.currentTime + 0.2); // E5
+                    celebrationOsc.frequency.setValueAtTime(784, this.audioContext.currentTime + 0.4); // G5
+                    
+                    celebrationGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    celebrationGain.gain.linearRampToValueAtTime(0.1, this.audioContext.currentTime + 0.1);
+                    celebrationGain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8);
+                    
+                    celebrationOsc.start(this.audioContext.currentTime);
+                    celebrationOsc.stop(this.audioContext.currentTime + 0.8);
+                } catch (e) {
+                    // Celebration sound failed, but that's okay
+                }
+            }, 1000);
+            
+        } catch (e) {
+            console.log('Could not play winning sound:', e);
+        }
     }
     
     addParticipant() {
@@ -275,7 +427,11 @@ class SpinWheel {
         if (this.isSpinning || this.participants.length < 2) return;
         
         this.isSpinning = true;
+        this.canvas.classList.add('spinning');
         this.updateSpinButton();
+        
+        // Play spinning sound
+        this.playSpinSound();
         
         // Random rotation between 1440 and 2160 degrees (4-6 full rotations)
         const minRotation = 1440;
@@ -305,13 +461,23 @@ class SpinWheel {
             
             this.currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
             
-            // Apply rotation to canvas
+            // Apply rotation to canvas - fix the rotation issue
+            const normalizedRotation = this.currentRotation % 360;
             this.canvas.style.transform = `rotate(${this.currentRotation}deg)`;
             
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                this.currentRotation = targetRotation % 360;
+                // Ensure final rotation is set correctly
+                this.currentRotation = targetRotation;
+                this.canvas.style.transform = `rotate(${this.currentRotation}deg)`;
+                
+                // Remove spinning visual effect
+                this.canvas.classList.remove('spinning');
+                
+                // Stop the spinning sound
+                this.stopSpinSound();
+                
                 this.isSpinning = false;
                 this.updateSpinButton();
                 callback();
@@ -359,6 +525,11 @@ class SpinWheel {
     showWinnerModal(winner) {
         document.getElementById('winnerName').textContent = `🎉 ${winner.name} 🎉`;
         this.showModal('winnerModal');
+        
+        // Play winning clap sound
+        setTimeout(() => {
+            this.playWinningSound();
+        }, 500); // Small delay to let the modal appear first
     }
     
     showModal(modalId) {
@@ -391,7 +562,11 @@ class SpinWheel {
         this.lastWinner = null;
         this.selectedWinner = null;
         
+        // Stop any playing sounds
+        this.stopSpinSound();
+        
         this.canvas.style.transform = 'rotate(0deg)';
+        this.canvas.classList.remove('spinning');
         this.updateParticipantsList();
         this.drawEmptyWheel();
         this.updateSpinButton();
