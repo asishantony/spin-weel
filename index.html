@@ -1,78 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Spin the Wheel</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="/spinner.svg" type="image/svg+xml">
-
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <div class="container">
-        <h1>Spin the Wheel</h1>
-        
+      <h1>Spin the Wheel</h1>
+      <div class="main-container">
         <!-- User Input Section -->
-        <div class="input-section">
-            <textarea id="userInput" placeholder="Enter participant names separated by commas (e.g., John, Sarah, Mike, Lisa)" rows="3" maxlength="500"></textarea>
+        <div class="participant-container">
+          <div class="input-section">
+            <textarea
+              id="userInput"
+              placeholder="Enter participant names separated by commas (e.g., John, Sarah, Mike, Lisa)"
+              rows="3"
+              maxlength="500"
+            ></textarea>
             <button id="addUserBtn">Add Participants</button>
-        </div>
-        
-        <!-- Participants List -->
-        <div class="participants-section">
+          </div>
+
+          <!-- Participants List -->
+          <div class="participants-section">
             <h3>Participants:</h3>
             <div id="participantsList"></div>
+          </div>
         </div>
-        
         <!-- Spin Wheel Container -->
         <div class="wheel-container">
-            <div class="wheel-wrapper">
-                <canvas id="wheelCanvas" width="400" height="400"></canvas>
-                <div class="wheel-pointer"></div>
-            </div>
-            <button id="spinBtn" class="spin-button">SPIN</button>
+          <div class="wheel-wrapper">
+            <canvas id="wheelCanvas" width="400" height="400"></canvas>
+            <div class="wheel-pointer"></div>
+          </div>
+          <button id="spinBtn" class="spin-button">SPIN</button>
         </div>
-        
-        <!-- Winner Display -->
-        <div id="winnerDisplay" class="winner-display"></div>
+      </div>
+      <!-- Winner Display -->
+      <div id="winnerDisplay" class="winner-display"></div>
     </div>
-    
+
     <!-- Modal for Remove Confirmation -->
     <div id="removeModal" class="modal">
-        <div class="modal-content">
-            <h3>Participant Selected!</h3>
-            <p id="selectedParticipant"></p>
-            <p>Do you want to remove this participant?</p>
-            <div class="modal-buttons">
-                <button id="removeYesBtn" class="btn-yes">Yes, Remove</button>
-                <button id="removeNoBtn" class="btn-no">No, Keep</button>
-            </div>
+      <div class="modal-content">
+        <h3>Participant Selected!</h3>
+        <p class="selectedParticipant" id="selectedParticipant"></p>
+        <p>Do you want to remove this participant?</p>
+        <div class="modal-buttons">
+          <button id="removeYesBtn" class="btn-yes">Yes, Remove</button>
+          <button id="removeNoBtn" class="btn-no">No, Keep</button>
         </div>
+      </div>
     </div>
-    
+
     <!-- Modal for Respin -->
     <div id="respinModal" class="modal">
-        <div class="modal-content">
-            <h3>Same Person Selected!</h3>
-            <p id="respinParticipant"></p>
-            <p>The same person was selected again. Let's respin!</p>
-            <div class="modal-buttons">
-                <button id="respinBtn" class="btn-respin">Respin</button>
-            </div>
+      <div class="modal-content">
+        <h3>Same Person Selected!</h3>
+        <p id="respinParticipant"></p>
+        <p>The same person was selected again. Let's respin!</p>
+        <div class="modal-buttons">
+          <button id="respinBtn" class="btn-respin">Respin</button>
         </div>
+      </div>
     </div>
-    
+
     <!-- Modal for Winner -->
     <div id="winnerModal" class="modal">
-        <div class="modal-content winner-modal">
-            <div class="confetti"></div>
-            <h2>🎉 WINNER! 🎉</h2>
-            <p id="winnerName"></p>
-            <div class="trophy">🏆</div>
-            <button id="newGameBtn" class="btn-new-game">Start New Game</button>
-        </div>
+      <div class="modal-content winner-modal">
+        <div class="confetti"></div>
+        <h2>🎉 WINNER! 🎉</h2>
+        <p id="winnerName"></p>
+        <div class="trophy">🏆</div>
+        <button id="newGameBtn" class="btn-new-game">Start New Game</button>
+      </div>
     </div>
-    
+
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
