@@ -461,3 +461,7 @@ p#selectedParticipant {
     font-size: 3rem;
   }
 }
+
+.winner {
+    font-size: 48px !important;
+}
